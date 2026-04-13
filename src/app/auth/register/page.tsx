@@ -1,10 +1,12 @@
-// app/auth/register/page.tsx
 'use client';
+
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import AuthForm, { RegisterPayload } from '../../../Components/AuthForm';
-import { register } from '../../../lib/api';
-import { useAuth } from '../../../hooks/useAuth';
+import AuthForm, { RegisterPayload } from '@/Components/AuthForm';
+import { register } from '@/lib/api';
+import { useAuth } from '@/Components/AuthProvider';
+
+const AUTH_TOKEN_KEY = 'encounter_token';
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -12,18 +14,25 @@ export default function RegisterPage() {
 
     async function handleRegister(payload: RegisterPayload) {
         const res = await register(payload);
+
+        window.localStorage.setItem(AUTH_TOKEN_KEY, res.token);
         setUser(res.user);
+
         if (res.user.role === 'LEADER') {
-            router.push('/leader/dashboard');
-        } else if (res.user.role === 'ADMIN') {
-            router.push('/admin/leaders');
-        } else {
-            router.push('/');
+            router.replace('/leader/dashboard');
+            return;
         }
+
+        if (res.user.role === 'ADMIN') {
+            router.replace('/admin/leaders');
+            return;
+        }
+
+        router.replace('/');
     }
 
     return (
-        <main className="max-w-3xl mx-auto p-6">
+        <main className="mx-auto max-w-3xl p-6">
             <AuthForm mode="register" onSubmit={handleRegister} />
         </main>
     );

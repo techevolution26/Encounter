@@ -1,4 +1,3 @@
-// components/AuthForm.tsx
 'use client';
 
 import React, { useState } from 'react';
@@ -23,31 +22,30 @@ type Props = {
 };
 
 export default function AuthForm({ mode, onSubmit }: Props) {
-    const [name, setName] = useState<string>('');
-    const [email, setEmail] = useState<string>('');
-    const [password, setPassword] = useState<string>('');
-    const [passwordConfirmation, setPasswordConfirmation] = useState<string>('');
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [passwordConfirmation, setPasswordConfirmation] = useState('');
     const [role, setRole] = useState<Role>('USER');
-    const [loading, setLoading] = useState<boolean>(false);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setError(null);
         setLoading(true);
+
         try {
             if (mode === 'login') {
-                const payload: LoginPayload = { email, password };
-                await onSubmit(payload);
+                await onSubmit({ email: email.trim(), password });
             } else {
-                const payload: RegisterPayload = {
+                await onSubmit({
                     name: name.trim() || undefined,
                     email: email.trim(),
                     password,
                     password_confirmation: passwordConfirmation,
                     role,
-                };
-                await onSubmit(payload);
+                });
             }
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Unexpected error');
@@ -57,14 +55,19 @@ export default function AuthForm({ mode, onSubmit }: Props) {
     }
 
     return (
-        <form onSubmit={handleSubmit} className="max-w-lg w-full bg-white p-6 rounded-md shadow-sm">
-            <h2 className="text-xl font-semibold mb-4">{mode === 'login' ? 'Login' : 'Create an account'}</h2>
+        <form
+            onSubmit={handleSubmit}
+            className="w-full max-w-lg rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm"
+        >
+            <h2 className="mb-4 text-xl font-semibold text-foreground">
+                {mode === 'login' ? 'Login' : 'Create an account'}
+            </h2>
 
             {mode === 'register' && (
                 <div className="mb-3">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                    <label className="mb-1 block text-sm font-medium text-foreground">Name</label>
                     <input
-                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-foreground placeholder:text-[var(--muted)] outline-none transition focus:border-[var(--primary)]"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Your name (optional)"
@@ -73,11 +76,11 @@ export default function AuthForm({ mode, onSubmit }: Props) {
             )}
 
             <div className="mb-3">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="mb-1 block text-sm font-medium text-foreground">Email</label>
                 <input
                     type="email"
                     required
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-foreground placeholder:text-[var(--muted)] outline-none transition focus:border-[var(--primary)]"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
@@ -85,11 +88,11 @@ export default function AuthForm({ mode, onSubmit }: Props) {
             </div>
 
             <div className="mb-3">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <label className="mb-1 block text-sm font-medium text-foreground">Password</label>
                 <input
                     type="password"
                     required
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-foreground outline-none transition focus:border-[var(--primary)]"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                 />
@@ -98,28 +101,32 @@ export default function AuthForm({ mode, onSubmit }: Props) {
             {mode === 'register' && (
                 <>
                     <div className="mb-3">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Confirm password</label>
+                        <label className="mb-1 block text-sm font-medium text-foreground">
+                            Confirm password
+                        </label>
                         <input
                             type="password"
                             required
-                            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-foreground outline-none transition focus:border-[var(--primary)]"
                             value={passwordConfirmation}
                             onChange={(e) => setPasswordConfirmation(e.target.value)}
                         />
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Register as</label>
+                        <label className="mb-1 block text-sm font-medium text-foreground">
+                            Register as
+                        </label>
                         <select
                             value={role}
                             onChange={(e) => setRole(e.target.value as Role)}
-                            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-foreground outline-none transition focus:border-[var(--primary)]"
                         >
                             <option value="USER">User</option>
                             <option value="LEADER">Leader</option>
                             <option value="ADMIN">Admin</option>
                         </select>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="mt-1 text-xs text-[var(--muted)]">
                             Tip: Admin registration may be disabled on the server for security.
                         </p>
                     </div>
@@ -130,7 +137,7 @@ export default function AuthForm({ mode, onSubmit }: Props) {
                 <button
                     type="submit"
                     disabled={loading}
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                    className="inline-flex items-center rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] transition hover:opacity-90 disabled:opacity-50"
                 >
                     {loading ? 'Please wait…' : mode === 'login' ? 'Login' : 'Register'}
                 </button>
@@ -138,20 +145,19 @@ export default function AuthForm({ mode, onSubmit }: Props) {
                 <button
                     type="button"
                     onClick={() => {
-                        // quick client-side reset (not submit)
                         setName('');
                         setEmail('');
                         setPassword('');
                         setPasswordConfirmation('');
                         setError(null);
                     }}
-                    className="text-sm text-gray-600"
+                    className="text-sm text-[var(--muted)] transition hover:text-foreground"
                 >
                     Reset
                 </button>
             </div>
 
-            {error && <div className="mt-3 text-sm text-red-600">{error}</div>}
+            {error && <div className="mt-3 text-sm text-[var(--danger)]">{error}</div>}
         </form>
     );
 }

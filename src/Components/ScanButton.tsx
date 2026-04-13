@@ -6,15 +6,24 @@ import classNames from 'classnames';
 type Props = {
   scanning?: boolean;
   onClick?: () => void;
+  disabled?: boolean;
+  ariaLabel?: string;
 };
 
-export default function ScanButton({ scanning=false, onClick }: Props) {
+export default function ScanButton({
+  scanning = false,
+  onClick,
+  disabled = false,
+  ariaLabel = 'Scan for leaders',
+}: Props) {
   return (
     <button
-      className={classNames('scan-btn', { 'scanning': scanning })}
+      type="button"
+      className={classNames('scan-btn', { scanning })}
       onClick={onClick}
+      disabled={disabled}
       aria-pressed={scanning}
-      aria-label="Scan for leaders"
+      aria-label={ariaLabel}
     >
       <div className="scan-ring" />
       <div className="scan-inner">

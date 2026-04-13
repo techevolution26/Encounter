@@ -10,7 +10,7 @@ import {
     uploadAvatar,
     deleteAvatar,
 } from '../../lib/api';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../Components/AuthProvider';
 
 export default function ProfilePage(): JSX.Element {
     const { user, setUser } = useAuth();

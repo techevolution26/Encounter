@@ -1,11 +1,9 @@
-//src/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { AuthProvider } from "@/Components/AuthProvider";
+import Providers from "@/Components/Providers";
 import Header from "@/Components/Header";
 import "./globals.css";
 
-// 1. Configure Fonts with CSS variables for Tailwind integration
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -16,10 +14,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// 2. Define SEO Metadata
 export const metadata: Metadata = {
-  title: "Encounter",
-  description: "Meet With Christ Daily",
+  title: {
+    default: "Encounter",
+    template: "%s | Encounter",
+  },
+  description: "Meet with Christ daily.",
+  applicationName: "Encounter",
+  metadataBase: new URL("http://localhost:3000"),
 };
 
 export default function RootLayout({
@@ -28,23 +30,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`
-          ${geistSans.variable}
-          ${geistMono.variable}
-          antialiased 
-          bg-gray-50 
-          text-gray-900
-        `}
+        className={[
+          geistSans.variable,
+          geistMono.variable,
+          "min-h-screen antialiased bg-background text-foreground",
+        ].join(" ")}
       >
-        {/* Wrap application in Auth Provider */}
-        <AuthProvider>
-          <Header />
-          <main className="container mx-auto px-4 py-6">
-            {children}
-          </main>
-        </AuthProvider>
+        <Providers>
+          <div className="min-h-screen bg-background text-foreground">
+            <Header />
+            <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+              {children}
+            </div>
+          </div>
+        </Providers>
       </body>
     </html>
   );
