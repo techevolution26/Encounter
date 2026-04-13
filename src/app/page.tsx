@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthContext } from '../Components/AuthProvider';
+import { useAuth } from '../Components/AuthProvider';
 import ScanButton from '../Components/ScanButton';
 import { scan } from '../lib/api';
 import type { ScanResponse } from '../types';
@@ -12,7 +12,7 @@ type FoundMatch = { leaderId: string; sessionId: string };
 
 export default function HomePage() {
   const router = useRouter();
-  const { user } = useAuthContext(); // Access auth state
+  const { user } = useAuth(); // Access auth state
 
   const [status, setStatus] = useState<'idle' | 'scanning' | 'found' | 'none'>('idle');
   const [found, setFound] = useState<FoundMatch | null>(null);

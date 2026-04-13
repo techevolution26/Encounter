@@ -3,7 +3,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from './AuthProvider';
 import { useState } from 'react';
 
 export default function Header() {

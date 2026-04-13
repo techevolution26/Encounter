@@ -5,13 +5,13 @@ import React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AuthForm, { LoginPayload } from '../../../Components/AuthForm';
 import { login } from '../../../lib/api';
-import { useAuthContext } from '../../../Components/AuthProvider';
+import { useAuth } from '../../../Components/AuthProvider';
 
 export default function LoginPage() {
     const router = useRouter();
     const search = useSearchParams();
     const returnUrl = search?.get('returnUrl') ?? '/';
-    const { setUser } = useAuthContext();
+    const { setUser } = useAuth();
 
     async function handleLogin(payload: LoginPayload) {
         const res = await login(payload);

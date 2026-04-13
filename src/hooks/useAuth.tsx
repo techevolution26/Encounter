@@ -7,27 +7,42 @@ import { me } from '../lib/api';
 
 export function useAuth() {
     const [user, setUser] = useState<User | null>(null);
+    // Initialize loading based on token presence to avoid unnecessary flashes
     const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
         let mounted = true;
-        (async () => {
+
+        async function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                if (mounted) setLoading(false);
+                return;
+            }
+
             try {
                 const u = await me();
                 if (mounted) setUser(u);
-            } catch {
+            } catch (err) {
+                // If token is invalid, clear it
+                localStorage.removeItem('token');
                 if (mounted) setUser(null);
             } finally {
                 if (mounted) setLoading(false);
             }
-        })();
-        return () => {
-            mounted = false;
-        };
+        }
+
+        checkAuth();
+        return () => { mounted = false; };
     }, []);
 
-    const logout = () => setUser(null);
-
+    const logout = async () => {
+        try {
+            localStorage.removeItem('token');
+            setUser(null);
+            window.location.href = '/auth/login';
+        } catch { }
+    }
     return { user, setUser, loading, logout };
 }
 

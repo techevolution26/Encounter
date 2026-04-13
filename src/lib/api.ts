@@ -440,3 +440,13 @@ function fileToDataUrl(file: File): Promise<string> {
         reader.readAsDataURL(file);
     });
 }
+
+export async function checkinSelf(): Promise<{ success: true }> {
+    const r = await api.post<{ success: true }>('/leader/me/checkin');
+    return r.data;
+}
+
+export async function checkoutSelf(): Promise<{ success: true }> {
+    const r = await api.post<{ success: true }>('/leader/me/checkout');
+    return r.data;
+}
