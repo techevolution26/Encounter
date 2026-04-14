@@ -122,7 +122,7 @@ export interface UpdateUserProfileResponse {
 /* ---------- Leader DTOs ---------- */
 
 export interface UpdateLeaderPayload {
-  bio?: string;
+  bio?: string | null;
   avatar?: string | null;
   verification_badge?: string | null;
 }

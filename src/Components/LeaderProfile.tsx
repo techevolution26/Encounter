@@ -1,145 +1,105 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-// IMPORTANT: Use the same AuthProvider as your Header to avoid state mismatch
-import { useAuth } from '../Components/AuthProvider';
-import type { Leader, EventItem } from '../types';
-import {
-    getMyLeader,
-    updateMyLeader,
-    listMyEvents,
-    createMyEvent,
-    checkinSelf,
-    checkoutSelf
-} from '../lib/api';
+import type { Leader, UpdateLeaderPayload } from '../types';
 
-import LeaderProfile from '../Components/LeaderProfile';
-import LeaderEvents from '../Components/LeaderEvents';
+type Props = {
+    leader: Leader | null;
+    loading?: boolean;
+    onSave: (payload: UpdateLeaderPayload) => Promise<void>;
+};
 
-export default function LeaderDashboardPage() {
-    const { user, loading } = useAuth();
+export default function LeaderProfile({
+    leader,
+    loading = false,
+    onSave,
+}: Props) {
+    const [bio, setBio] = useState('');
+    const [avatar, setAvatar] = useState('');
+    const [verificationBadge, setVerificationBadge] = useState('');
+    const [saving, setSaving] = useState(false);
+    const [message, setMessage] = useState<string | null>(null);
 
-    const [leader, setLeader] = useState<Leader | null>(null);
-    const [events, setEvents] = useState<EventItem[]>([]);
-    const [loadingLeader, setLoadingLeader] = useState<boolean>(true);
-    const [loadingEvents, setLoadingEvents] = useState<boolean>(true);
-    const [checking, setChecking] = useState<boolean>(false);
-
-    // Fetch all data in one effect once user is authenticated
     useEffect(() => {
-        if (loading || !user || user.role !== 'LEADER') return;
+        setBio(leader?.bio ?? '');
+        setAvatar(leader?.avatar ?? '');
+        setVerificationBadge(leader?.verification_badge ?? '');
+    }, [leader]);
 
-        let cancelled = false;
+    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+        setSaving(true);
+        setMessage(null);
 
-        async function loadDashboardData() {
-            setLoadingLeader(true);
-            setLoadingEvents(true);
-            try {
-                // Run in parallel for speed
-                const [leaderData, eventsData] = await Promise.all([
-                    getMyLeader(),
-                    listMyEvents()
-                ]);
-
-                if (!cancelled) {
-                    setLeader(leaderData);
-                    setEvents(eventsData);
-                }
-            } catch (err) {
-                console.error("Failed to load dashboard data", err);
-            } finally {
-                if (!cancelled) {
-                    setLoadingLeader(false);
-                    setLoadingEvents(false);
-                }
-            }
-        }
-
-        loadDashboardData();
-        return () => { cancelled = true; };
-    }, [user, loading]);
-
-    // Auth Guard: If still checking session, show nothing or a clean spinner
-    if (loading) return <div className="p-10 text-center">Verifying session...</div>;
-
-    // If loading finished and no user, return null (AuthProvider handles redirect)
-    if (!user) return null;
-
-    if (user.role !== 'LEADER') {
-        return <div className="p-10 text-center text-red-600">Access denied — leaders only.</div>;
-    }
-
-    async function handleProfileSave(payload: { bio?: string; avatar?: string; verification_badge?: string }) {
-        if (!leader) return;
-        const res = await updateMyLeader(payload);
-        setLeader(res.leader);
-    }
-
-    async function handleCreateEvent(payload: { title: string; description?: string; start_at?: string; end_at?: string; location?: string }) {
-        const resp = await createMyEvent(payload);
-        setEvents((prev) => [resp.event, ...prev]);
-    }
-
-    async function handleCheckin() {
         try {
-            setChecking(true);
-            await checkinSelf();
-            setLeader((s) => (s ? { ...s, online: true } : s));
+            await onSave({
+                bio: bio.trim() || null,
+                avatar: avatar.trim() || null,
+                verification_badge: verificationBadge.trim() || null,
+            });
+            setMessage('Profile saved');
+        } catch (error) {
+            console.error('Failed to save leader profile', error);
+            setMessage('Save failed');
         } finally {
-            setChecking(false);
+            setSaving(false);
+            window.setTimeout(() => setMessage(null), 2500);
         }
-    }
-
-    async function handleCheckout() {
-        await checkoutSelf();
-        setLeader((s) => (s ? { ...s, online: false } : s));
     }
 
     return (
-        <main className="max-w-4xl mx-auto p-6 space-y-6">
-            <header className="flex items-center justify-between">
-                <h1 className="text-2xl font-semibold">Leader dashboard</h1>
-                <div className="text-right">
-                    <div className="text-sm text-gray-600">Signed in as</div>
-                    <div className="font-medium">{user.name}</div>
-                </div>
-            </header>
+        <section className="card rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm">
+            <h3 className="mb-4 text-lg font-semibold text-foreground">Leader profile</h3>
 
-            <section className="grid md:grid-cols-2 gap-6">
+            <form onSubmit={handleSubmit} className="space-y-3">
                 <div>
-                    <div className="card p-4 border rounded-lg bg-white shadow-sm">
-                        <h2 className="text-lg font-medium mb-3">Presence</h2>
-                        <p className="mb-2">Leader ID: <span className="font-mono text-sm">{leader?.id ?? '—'}</span></p>
-                        <p className="mb-4">Online: <strong>{leader?.online ? 'Yes' : 'No'}</strong></p>
-                        <div className="flex gap-3">
-                            <button
-                                onClick={handleCheckin}
-                                disabled={checking || leader?.online || loadingLeader}
-                                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-                            >
-                                {checking ? 'Checking in…' : 'Check in'}
-                            </button>
-
-                            <button
-                                onClick={handleCheckout}
-                                disabled={!leader?.online || loadingLeader}
-                                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
-                            >
-                                Check out
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="mt-4">
-                        {/* The "Please Login" usually lived here inside LeaderProfile if leader was null */}
-                        <LeaderProfile leader={leader} loading={loadingLeader} onSave={handleProfileSave} />
-                    </div>
+                    <label className="mb-1 block text-sm font-medium text-foreground">Bio</label>
+                    <textarea
+                        value={bio}
+                        onChange={(e) => setBio(e.target.value)}
+                        rows={5}
+                        disabled={loading || saving}
+                        className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-foreground placeholder:text-[var(--muted)] outline-none transition focus:border-[var(--primary)] disabled:opacity-60"
+                        placeholder="Write a short leader bio"
+                    />
                 </div>
 
                 <div>
-                    <LeaderEvents events={events} loading={loadingEvents} onCreate={handleCreateEvent} />
+                    <label className="mb-1 block text-sm font-medium text-foreground">Avatar URL</label>
+                    <input
+                        value={avatar}
+                        onChange={(e) => setAvatar(e.target.value)}
+                        disabled={loading || saving}
+                        className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-foreground placeholder:text-[var(--muted)] outline-none transition focus:border-[var(--primary)] disabled:opacity-60"
+                        placeholder="https://..."
+                    />
                 </div>
-            </section>
-        </main>
+
+                <div>
+                    <label className="mb-1 block text-sm font-medium text-foreground">Verification badge</label>
+                    <input
+                        value={verificationBadge}
+                        onChange={(e) => setVerificationBadge(e.target.value)}
+                        disabled={loading || saving}
+                        className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-foreground placeholder:text-[var(--muted)] outline-none transition focus:border-[var(--primary)] disabled:opacity-60"
+                        placeholder="Optional badge label"
+                    />
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <button
+                        type="submit"
+                        disabled={loading || saving}
+                        className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] transition hover:opacity-90 disabled:opacity-50"
+                    >
+                        {saving ? 'Saving…' : 'Save profile'}
+                    </button>
+
+                    {message && (
+                        <span className="text-sm text-[var(--muted)]">{message}</span>
+                    )}
+                </div>
+            </form>
+        </section>
     );
 }

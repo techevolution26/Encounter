@@ -33,19 +33,42 @@ export default function AuthForm({ mode, onSubmit }: Props) {
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setError(null);
+
+        if (mode === 'register') {
+            if (password.length < 6) {
+                setError('Password must be at least 6 characters.');
+                return;
+            }
+
+            if (new TextEncoder().encode(password).length > 72) {
+                setError('Password is too long for the current auth setup. Keep it under 72 bytes.');
+                return;
+            }
+
+            if (password !== passwordConfirmation) {
+                setError('Passwords do not match.');
+                return;
+            }
+        }
+
         setLoading(true);
 
         try {
             if (mode === 'login') {
-                await onSubmit({ email: email.trim(), password });
+                const payload: LoginPayload = {
+                    email: email.trim(),
+                    password,
+                };
+                await onSubmit(payload);
             } else {
-                await onSubmit({
+                const payload: RegisterPayload = {
                     name: name.trim() || undefined,
                     email: email.trim(),
                     password,
                     password_confirmation: passwordConfirmation,
                     role,
-                });
+                };
+                await onSubmit(payload);
             }
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Unexpected error');
@@ -124,10 +147,10 @@ export default function AuthForm({ mode, onSubmit }: Props) {
                         >
                             <option value="USER">User</option>
                             <option value="LEADER">Leader</option>
-                            <option value="ADMIN">Admin</option>
+                            {/* <option value="ADMIN">Admin</option> */}
                         </select>
                         <p className="mt-1 text-xs text-[var(--muted)]">
-                            Tip: Admin registration may be disabled on the server for security.
+                            Tip: Leader registration may be disabled on the server for security.
                         </p>
                     </div>
                 </>
